@@ -1,70 +1,49 @@
 import streamlit as st
 import joblib
 
-# 1. Konfigurasi Halaman Web Streamlit
-st.set_page_config(
-    page_title="Deteksi Emosi Perubahan Iklim - KNN",
-    page_icon="🎭",
-    layout="centered"
-)
+st.set_page_config(page_title="Sentimen Climate Change", page_icon="🌍", layout="centered")
 
-# 2. Fungsi untuk Memuat Model dan Vectorizer (Aman dengan Cache)
 @st.cache_resource
 def load_model_dan_vectorizer():
-    # Mengambil file .pkl hasil training KNN dari Google Colab
     model = joblib.load('model.pkl')
     vectorizer = joblib.load('vectorizer.pkl')
     return model, vectorizer
 
-# Eksekusi pemuatan model
 try:
     model, vectorizer = load_model_dan_vectorizer()
 except Exception as e:
-    st.error(f"Gagal memuat file acuan AI. Pastikan file 'model.pkl' dan 'vectorizer.pkl' versi KNN sudah diletakkan di folder yang sama dengan file script ini!")
+    st.error("Error: File model.pkl atau vectorizer.pkl tidak ditemukan!")
     st.stop()
 
-# 3. Tampilan Antarmuka Pengguna (User Interface)
-st.title("🎭 Deteksi Emosi Publik terhadap Perubahan Iklim")
-st.markdown("""
-Aplikasi web berbasis **Machine Learning (NLP)** ini ditenagai oleh algoritma **K-Nearest Neighbors (KNN)**. 
-Sistem akan menganalisis dan mendeteksi emosi atau sentimen di balik teks/tweet mengenai isu **Perubahan Iklim (Climate Change)**.
+st.title("🌍 Analisis Sentimen Publik: Perubahan Iklim")
+st.markdown("Aplikasi Machine Learning berbasis **Naive Bayes** untuk mendeteksi sentimen cuitan Twitter mengenai *Climate Change*.")
+
+st.info("""
+**Kategori Sentimen:**
+* 🟢 **Positif:** Pro-lingkungan / Mendukung aksi iklim.
+* 🔴 **Negatif:** Skeptis / Menyangkal pemanasan global.
+* ⚪ **Netral:** Opini umum biasa.
+* 🔵 **Berita:** Berbagi tautan fakta objektif.
 """)
 
-st.info("💡 **Kategori Emosi yang Tersedia:** Ketakutan (Fear), Kemarahan (Anger), Optimisme (Optimism), atau Netral (Neutral).")
+user_input = st.text_area("Ketik cuitan (Bahasa Inggris) di sini:", height=150)
 
-# Kotak Input Teks dari Pengguna
-user_input = st.text_area("Masukkan tweet atau kalimat opini (dalam Bahasa Inggris):", 
-                          height=150, 
-                          placeholder="Contoh: Climate change is a massive threat to our future generations, we must act now...")
-
-# 4. Logika Prediksi KNN Saat Tombol Ditekan
-if st.button("Analisis Emosi Teks"):
+if st.button("Analisis Sentimen"):
     if user_input.strip() == "":
-        st.warning("⚠️ Teks tidak boleh kosong! Silakan masukkan kalimat terlebih dahulu.")
+        st.warning("⚠️ Teks tidak boleh kosong!")
     else:
-        with st.spinner("Sedang memproses teks dengan model KNN..."):
-            # a. Ubah teks input pengguna menjadi vektor angka
+        with st.spinner("AI sedang menganalisis..."):
             input_vektor = vectorizer.transform([user_input])
-            
-            # b. Lakukan prediksi emosi menggunakan kecerdasan KNN
             hasil_prediksi = model.predict(input_vektor)[0]
             
-            # c. Tampilkan hasil prediksi dengan visualisasi yang menarik
-            st.success("🎉 Teks Berhasil Dianalisis!")
-            
-            # Modifikasi tampilan output box berdasarkan hasil emosi agar lebih interaktif
-            if "Ketakutan" in hasil_prediksi:
-                st.error(f"### Hasil Klasifikasi: **{hasil_prediksi}** 😨")
-                st.markdown("*Teks ini mengindikasikan rasa cemas, panik, atau kekhawatiran mendalam (**Climate Anxiety**) terhadap dampak buruk kerusakan lingkungan.*")
-            elif "Kemarahan" in hasil_prediksi:
-                st.warning(f"### Hasil Klasifikasi: **{hasil_prediksi}** 🤬")
-                st.markdown("*Teks ini mengindikasikan kemarahan, skeptisisme, atau ketidakpuasan terhadap kebijakan, pajak, atau propaganda isu iklim.*")
-            elif "Optimisme" in hasil_prediksi:
-                st.info(f"### Hasil Klasifikasi: **{hasil_prediksi}** 🌱")
-                st.markdown("*Teks ini memuat harapan, solusi teknologi hijau, aksi nyata, atau pandangan positif terhadap pemulihan bumi.*")
+            st.success("Selesai!")
+            if "Positif" in hasil_prediksi:
+                st.success(f"### Hasil: {hasil_prediksi}")
+            elif "Negatif" in hasil_prediksi:
+                st.error(f"### Hasil: {hasil_prediksi}")
+            elif "Berita" in hasil_prediksi:
+                st.info(f"### Hasil: {hasil_prediksi}")
             else:
-                st.success(f"### Hasil Klasifikasi: **{hasil_prediksi}** 😐")
-                st.markdown("*Teks berupa penyampaian berita objektif atau fakta umum tanpa adanya muatan emosi personal yang kuat.*")
+                st.warning(f"### Hasil: {hasil_prediksi}")
 
-st.markdown("---")
-st.caption("Proyek UAS Machine Learning | Klasifikasi Teks NLP Berbasis KNN | Deployment via Streamlit Community Cloud")
+st.caption("Proyek UAS Machine Learning | Naive Bayes")

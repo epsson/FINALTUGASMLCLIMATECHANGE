@@ -2,7 +2,7 @@ import streamlit as st
 import joblib
 
 # Load model dan vectorizer
-model = joblib.load('model_naive_bayes.pkl')
+model = joblib.load('model.pkl')
 vectorizer = joblib.load('vectorizer.pkl')
 
 # Kamus Penjelasan Kategori
@@ -15,20 +15,23 @@ deskripsi_kategori = {
 }
 
 st.title("🎓 Sistem Klasifikasi Keluhan Mahasiswa")
-st.write("Masukkan keluhan mahasiswa untuk mengetahui kategori layanannya.")
+# --- BARIS TAMBAHAN UNTUK PAMER KE DOSEN ---
+st.markdown("*Aplikasi Machine Learning berbasis **Logistic Regression** untuk memetakan keluhan mahasiswa sesuai SDG 4 (Quality Education).*")
+st.markdown("---")
 
-user_input = st.text_area("Tulis keluhan di sini:")
+user_input = st.text_area("Tulis keluhan (dalam Bahasa Inggris) di sini:", placeholder="Contoh: The library is always closed when I need to study...")
 
 if st.button("Klasifikasikan"):
-    if user_input:
-        input_vec = vectorizer.transform([user_input])
-        prediction = model.predict(input_vec)[0]
-        
-        # Tampilkan Hasil
-        st.success(f"### Kategori Keluhan: {prediction}")
-        
-        # Tampilkan Deskripsi dari Kamus
-        penjelasan = deskripsi_kategori.get(prediction, "Kategori tidak ditemukan dalam deskripsi.")
-        st.info(f"**Penjelasan:** {penjelasan}")
+    if user_input.strip() == "":
+        st.warning("⚠️ Tolong masukkan teks keluhan.")
     else:
-        st.warning("Tolong masukkan teks keluhan.")
+        with st.spinner("AI sedang menganalisis laporan..."):
+            input_vec = vectorizer.transform([user_input])
+            prediction = model.predict(input_vec)[0]
+            
+            # Tampilkan Hasil
+            st.success(f"### Kategori Keluhan: {prediction}")
+            
+            # Tampilkan Deskripsi dari Kamus
+            penjelasan = deskripsi_kategori.get(prediction, "Kategori tidak ditemukan dalam deskripsi.")
+            st.info(f"**💡 Penjelasan:** {penjelasan}")
